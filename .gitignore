@@ -9,3 +9,4 @@ logs/
 .pydevproject
 .settings/
 venv/
+.env
