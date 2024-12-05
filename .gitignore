@@ -1,1 +1,6 @@
 *.ini
+# log files files
+logs/
+*.log
+#Docker related files
+.dockerignore
