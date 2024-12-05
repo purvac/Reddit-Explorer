@@ -4,3 +4,8 @@ logs/
 *.log
 #Docker related files
 .dockerignore
+*.DS_Store
+.project
+.pydevproject
+.settings/
+venv/
