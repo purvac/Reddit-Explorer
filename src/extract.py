@@ -21,9 +21,11 @@ def main():
     subreddit = reddit.subreddit(SUBREDDIT_NAME)
 
     yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
+    
+    filename = "reddit-post-data-" + str(yesterday_date)
 
     try:
-        with open('reddit_posts.csv', 'a', newline='') as csvfile:
+        with open(filename, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
             
             # Write header row only if file is empty
@@ -38,6 +40,7 @@ def main():
         print(f"API Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+        
 
 if __name__ == "__main__":
     main()
