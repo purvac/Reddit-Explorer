@@ -1,7 +1,7 @@
 from common.data_cleaning import remove_special_characters
 from datetime import datetime
 
-def write_post_data(writer, submission):
+def write_post_data(writer: object, submission: object):
     """
     Writes a single post's data to the CSV file.
 
@@ -17,3 +17,4 @@ def write_post_data(writer, submission):
         submission.upvote_ratio,
         submission.url,
     ])
+    return None

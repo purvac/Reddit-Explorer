@@ -1,5 +1,6 @@
 import praw
 import csv
+import sys
 
 from datetime import datetime, timedelta
 from common.write_csv import write_post_data
@@ -22,7 +23,7 @@ def main():
 
     yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
     
-    filename = "reddit-post-data-" + str(yesterday_date)
+    filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
 
     try:
         with open(filename, 'a', newline='') as csvfile:
@@ -40,7 +41,9 @@ def main():
         print(f"API Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+    
+    return 0
         
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
