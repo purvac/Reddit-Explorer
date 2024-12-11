@@ -11,3 +11,4 @@ logs/
 venv/
 .env
 *.pyc
+reddit-post-data*.csv
