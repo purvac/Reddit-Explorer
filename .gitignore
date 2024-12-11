@@ -1,1 +1,14 @@
 *.ini
+# log files files
+logs/
+*.log
+#Docker related files
+.dockerignore
+*.DS_Store
+.project
+.pydevproject
+.settings/
+venv/
+.env
+*.pyc
+reddit-post-data*.csv
