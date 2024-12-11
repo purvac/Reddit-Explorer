@@ -1,6 +1,7 @@
 import praw
 import csv
 import sys
+import logging
 
 from datetime import datetime, timedelta
 from common.write_csv import write_post_data
@@ -16,8 +17,8 @@ def main():
     try:
         reddit = praw.Reddit(config_file='praw.ini')
     except (praw.exceptions.ClientException, FileNotFoundError) as e:
-        print(f"Error configuring PRAW: {e}")
-        return
+        logging.error(f"Error configuring PRAW: {e}")
+        return 
 
     subreddit = reddit.subreddit(SUBREDDIT_NAME)
 
@@ -26,7 +27,7 @@ def main():
     filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
 
     try:
-        with open(filename, 'a', newline='') as csvfile:
+        with open(filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             
             # Write header row only if file is empty
@@ -38,9 +39,9 @@ def main():
                     write_post_data(writer, submission)
 
     except praw.exceptions.RedditAPIException as e:
-        print(f"API Error: {e}")
+        logging.error(f"API Error: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
     
     return 0
         
