@@ -1,8 +1,25 @@
 import praw
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
 #get client_id, client_secret, user_agent, username and password from praw.ini file
 #More information on configuring praw.ini files given here - https://praw.readthedocs.io/en/stable/getting_started/configuration/prawini.html
-reddit = praw.Reddit("DEFAULT") 
+"""
+        
+reddit = praw.Reddit("DEFAULT")
+
+
+ """
+load_dotenv()
+
+reddit = praw.Reddit(
+    client_id=os.getenv("client_id"),
+    client_secret=os.getenv("client_secret"),
+    user_agent=os.getenv("user_agent"),
+    password=os.getenv("password"),
+    username=os.getenv("username"),
+)
 
 # if reddit credentials are put in, below statement will be false since your reddit instance is not read only
 print(reddit.read_only)
