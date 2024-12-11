@@ -1,1 +1,9 @@
 *.ini
+*.DS_Store
+*.env
+.project
+.pydevproject
+.settings/
+airflow/logs
+*.csv
+venv/

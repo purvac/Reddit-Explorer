@@ -1,36 +1,50 @@
 import praw
-from datetime import datetime
-#get client_id, client_secret, user_agent, username and password from praw.ini file
-#More information on configuring praw.ini files given here - https://praw.readthedocs.io/en/stable/getting_started/configuration/prawini.html
-reddit = praw.Reddit("DEFAULT") 
+import csv
+import sys
+import logging
 
-# if reddit credentials are put in, below statement will be false since your reddit instance is not read only
-print(reddit.read_only)
+from datetime import datetime, timedelta
+from common.write_csv import write_post_data
 
 
-subreddit_name = "dataengineering"
-subreddit = reddit.subreddit(subreddit_name)
+SUBMISSION_PULL_LIMIT = 50
+SUBREDDIT_NAME = "dataengineering"
 
-n_of_posts = 0
-try: 
-    new_posts = subreddit.new(limit=10)
-    for post_id in new_posts: 
-        #n_of_posts = n_of_posts + 1
-        print(f"Post ID: {post_id}")
-        submission = reddit.submission(id=post_id)
-        print(f"# of comments: {submission.num_comments}")
+
+def main():
+
+    # Configure PRAW with credentials from praw.ini file
+    try:
+        reddit = praw.Reddit(config_file='praw.ini')
+    except (praw.exceptions.ClientException, FileNotFoundError) as e:
+        logging.error(f"Error configuring PRAW: {e}")
+        return 
+
+    subreddit = reddit.subreddit(SUBREDDIT_NAME)
+
+    yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
+    
+    filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
+
+    try:
+        with open(filename, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            
+            # Write header row only if file is empty
+            if csvfile.tell() == 0:
+                writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
+
+            for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
+                if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
+                    write_post_data(writer, submission)
+
+    except praw.exceptions.RedditAPIException as e:
+        logging.error(f"API Error: {e}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+    
+    return 0
         
-        # Expand all comments and remove 'MoreComments' objects
-        submission.comments.replace_more(limit=None)
-        for comment in submission.comments.list(): 
-            print(f"Comment ID: {comment.id} Comment time: {datetime.utcfromtimestamp(comment.created_utc)}")
-        print("\n")
-        
-        #print(f"Title: {submission.title} | Score:{submission.score} | Created At: {datetime.utcfromtimestamp(submission.created_utc)} | Number of comments: {submission.num_comments} | Text: {submission.selftext}")
-        # the most activity would be measured for new items which receive most number of comments
-        # can we find the time a comment was posted to a post? 
-        #That way we can find the time when most comments are posted
-        #print(f"Post ID: {post_id} Created At: {datetime.utcfromtimestamp(submission.created_utc)} Number of comments: {submission.num_comments}")
-except Exception as e: 
-    print(f"An error occurred: {e}")
-    print("Total number of posts: " + n_of_posts)
+
+if __name__ == "__main__":
+    sys.exit(main())
