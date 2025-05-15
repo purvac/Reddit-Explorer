@@ -12,3 +12,5 @@ venv/
 .env
 *.pyc
 reddit-post-data*.csv
+airflow/logs
+*.csv
