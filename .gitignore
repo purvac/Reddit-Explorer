@@ -1,9 +1,16 @@
 *.ini
+# log files files
+logs/
+*.log
+#Docker related files
+.dockerignore
 *.DS_Store
-*.env
 .project
 .pydevproject
 .settings/
+venv/
+.env
+*.pyc
+reddit-post-data*.csv
 airflow/logs
 *.csv
-venv/

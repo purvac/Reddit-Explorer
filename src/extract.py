@@ -1,50 +1,63 @@
 import praw
-import csv
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
 import sys
 import logging
 
-from datetime import datetime, timedelta
-from common.write_csv import write_post_data
-
+#get client_id, client_secret, user_agent, username and password. Can't use praw.ini file since facing issues accessing praw.ini file in airflow run on docker
+"""       
+reddit = praw.Reddit("DEFAULT")
+ """
 
 SUBMISSION_PULL_LIMIT = 50
 SUBREDDIT_NAME = "dataengineering"
 
+def main(): 
 
-def main():
-
-    # Configure PRAW with credentials from praw.ini file
-    try:
-        reddit = praw.Reddit(config_file='praw.ini')
-    except (praw.exceptions.ClientException, FileNotFoundError) as e:
-        logging.error(f"Error configuring PRAW: {e}")
-        return 
-
-    subreddit = reddit.subreddit(SUBREDDIT_NAME)
-
-    yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
+  try:
+    load_dotenv()
     
-    filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
-
-    try:
-        with open(filename, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            
-            # Write header row only if file is empty
-            if csvfile.tell() == 0:
-                writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
-
-            for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
-                if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
-                    write_post_data(writer, submission)
-
-    except praw.exceptions.RedditAPIException as e:
-        logging.error(f"API Error: {e}")
-    except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+    reddit = praw.Reddit(
+        client_id=os.getenv("client_id"),
+        client_secret=os.getenv("client_secret"),
+        user_agent=os.getenv("user_agent"),
+        password=os.getenv("password"),
+        username=os.getenv("username"),
+    )
     
-    return 0
-        
+  except (praw.exceptions.ClientException, FileNotFoundError) as e:
+    logging.error(f"Error configuring PRAW: {e}")
+    return 
+
+  # if reddit credentials are put in, below statement will be false since your reddit instance is not read only
+  print(reddit.read_only)
+
+  subreddit = reddit.subreddit(SUBREDDIT_NAME)
+
+  yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
+    
+  filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
+
+  try:
+      with open(filename, 'w', newline='') as csvfile:
+          writer = csv.writer(csvfile)
+
+          # Write header row only if file is empty
+          if csvfile.tell() == 0:
+              writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
+
+          for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
+              if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
+                  write_post_data(writer, submission)
+
+  except praw.exceptions.RedditAPIException as e:
+      logging.error(f"API Error: {e}")
+  except Exception as e:
+      logging.error(f"An unexpected error occurred: {e}")
+    
+  return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
