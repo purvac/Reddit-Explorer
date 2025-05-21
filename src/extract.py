@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import sys
 import logging
 import csv
+from common.write_csv import write_post_data
 
 #get client_id, client_secret, user_agent, username and password. Can't use praw.ini file since facing issues accessing praw.ini file in airflow run on docker
 """       
