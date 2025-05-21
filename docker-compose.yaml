@@ -74,6 +74,8 @@ x-airflow-common:
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
     # Configuring the volumes 
+    # host_path:container_path 
+    # bash terminal opens in opt folder
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./src:/usr/local/airflow/src
