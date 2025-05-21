@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 import sys
 import logging
+import csv
+from common.write_csv import write_post_data
 
 #get client_id, client_secret, user_agent, username and password. Can't use praw.ini file since facing issues accessing praw.ini file in airflow run on docker
 """       
@@ -50,6 +52,7 @@ def main():
           for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
               if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
                   write_post_data(writer, submission)
+        
 
   except praw.exceptions.RedditAPIException as e:
       logging.error(f"API Error: {e}")

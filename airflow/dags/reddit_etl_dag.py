@@ -39,7 +39,11 @@ run_script_task = BashOperator(
 """
 Commands to run dag: 
 1. docker compose up airflow-init
-2. docker compose up --build
+2. docker compose up --build 
+    - The sequence docker-compose up airflow-init followed by docker-compose up -> explicitly ensure the initialization step happens first before the main Airflow components are started.
+    - The first command ensures your database is set up.
+    - The second command then brings up all the continuous Airflow services.
+
 3. docker ps -> to check if containers are up
 4. docker compose down --volumes --rmi all -> to stop and close all containers
 
