@@ -3,6 +3,8 @@
 
 This document contains essential notes and commands for running Apache Airflow using Docker Compose, focusing on initial setup, common operations, and troubleshooting.
 
+## [Created a lightweight local version of Airflow with Docker](https://datatalks.club/blog/how-to-setup-lightweight-local-version-for-airflow.html)
+
 ## Why `docker-compose up airflow-init` first?
 
 When bringing up an Airflow environment with Docker Compose, you typically run `docker-compose up airflow-init` before the full `docker-compose up`. This initial step is crucial for:
@@ -16,11 +18,11 @@ Once `airflow-init` completes, its container usually exits, having fulfilled its
 
 Here are some key commands you'll use regularly:
 
-1.  **`docker compose up`**
-    * **Short Description:** This is the primary command to **build, create, start, and manage** all the services defined in your `docker-compose.yml` file. It brings your entire multi-container application stack to life. If containers already exist, it will start them; if their configuration or image has changed, it will recreate them.
-
-2.  **`docker compose up airflow-init`**
+1.  **`docker compose up airflow-init`**
     * **What it does:** Starts *only* the `airflow-init` service (and its dependencies, e.g., the database) as defined in your `docker-compose.yml`. This service performs crucial one-time setup steps like database migration and creating the initial Airflow user. The container will then exit upon completion.
+
+2.   **`docker compose up`**
+    * **Short Description:** This is the primary command to **build, create, start, and manage** all the services defined in your `docker-compose.yml` file. It brings your entire multi-container application stack to life. If containers already exist, it will start them; if their configuration or image has changed, it will recreate them.
 
 3.  **`docker compose up --build`**
     * **What it does:** This is a variation of `docker compose up`.
