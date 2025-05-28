@@ -1,5 +1,12 @@
 
-# Airflow on Docker - My Setup Notes
+# Airflow on Docker Notes - Index: 
+[Lightweight Docker Manual](#created-a-lightweight-local-version-of-airflow-with-docker)  
+[Why run docker-compose up airflow-init first?](#why-docker-compose-up-airflow-init-first)  
+[Essential Docker Commands](#essential-docker-compose-commands)  
+[Understanding x-airflow-common and Volume Mounting in Docker](#understanding-x-airflow-common-and-volume-mounting)  
+[Accessing Docker bash terminal/Running Airflow commands inside Docker](#changing-airflow-user-password-and-other-airflow-cli-tasks)  
+[Understanding docker-compose.yaml file](#understanding-docker-composeyaml)  
+
 
 This document contains essential notes and commands for running Apache Airflow using Docker Compose, focusing on initial setup, common operations, and troubleshooting.
 
@@ -108,11 +115,8 @@ Here's the general process:
         ```
 
 The changes made via the `airflow users` commands are instantly updated in the Airflow metadata database and will be reflected in the Airflow UI without needing to restart the webserver in most cases.
-<<<<<<< HEAD
-=======
 
-
-# Understanding docker-compose.yaml: 
+## Understanding docker-compose.yaml: 
 ```
 FROM apache/airflow:2.10.3
 ADD requirements.txt . # copy the requirements.txt file into the docker image's current working directory (which is typically /opt/airflow)
@@ -120,4 +124,4 @@ RUN pip install -r requirements.txt # Install the Python packages listed in requ
 RUN pip install redis # Install the 'redis' Python client. This is often needed if Airflow uses Redis for caching, XComs, or Celery executor.
 RUN pip install python-dotenv # Useful for loading environment variables from .env files. 
 ```
->>>>>>> 21f11b6 (initial commit docker-info.md)
+
