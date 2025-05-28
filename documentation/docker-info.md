@@ -106,3 +106,16 @@ Here's the general process:
         ```
 
 The changes made via the `airflow users` commands are instantly updated in the Airflow metadata database and will be reflected in the Airflow UI without needing to restart the webserver in most cases.
+<<<<<<< HEAD
+=======
+
+
+# Understanding docker-compose.yaml: 
+```
+FROM apache/airflow:2.10.3
+ADD requirements.txt . # copy the requirements.txt file into the docker image's current working directory (which is typically /opt/airflow)
+RUN pip install -r requirements.txt # Install the Python packages listed in requirements.txt
+RUN pip install redis # Install the 'redis' Python client. This is often needed if Airflow uses Redis for caching, XComs, or Celery executor.
+RUN pip install python-dotenv # Useful for loading environment variables from .env files. 
+```
+>>>>>>> 21f11b6 (initial commit docker-info.md)
