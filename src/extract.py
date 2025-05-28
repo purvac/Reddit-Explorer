@@ -40,9 +40,11 @@ def main():
   yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
     
   filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
+  # the path below is the local path for the src folder in the docker container. 
+  destination = "/usr/local/airflow/src/" + filename
 
   try:
-      with open(filename, 'w', newline='') as csvfile:
+      with open(destination, 'w', newline='') as csvfile:
           writer = csv.writer(csvfile)
 
           # Write header row only if file is empty
@@ -51,8 +53,7 @@ def main():
 
           for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
               if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
-                  write_post_data(writer, submission)
-        
+                  write_post_data(writer, submission)        
 
   except praw.exceptions.RedditAPIException as e:
       logging.error(f"API Error: {e}")
