@@ -1,3 +1,8 @@
 #This is a sample .env file
 #To replicate this project, create a ".env" file with the below variables and your respective values
-AIRFLOW_UID=500
+AIRFLOW_UID=<airflow-uid-number>
+client_id=<client-id-value>
+client_secret=<client-secret-value>
+user_agent=<user-agent-name>
+password=<password>
+username=<reddit-username>
