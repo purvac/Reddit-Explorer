@@ -1,3 +1,0 @@
-#This is a sample .env file
-#To replicate this project, create a ".env" file with the below variables and your respective values
-AIRFLOW_UID=500

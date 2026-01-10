@@ -1,5 +1,5 @@
 import praw
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 import sys
@@ -37,7 +37,7 @@ def main():
 
   subreddit = reddit.subreddit(SUBREDDIT_NAME)
 
-  yesterday_date = datetime.date(datetime.utcnow()) - timedelta(days=1)
+  yesterday_date = datetime.now(timezone.utc).date() - timedelta(days=1)
     
   filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
   # the path below is the local path for the src folder in the docker container. 
@@ -52,7 +52,7 @@ def main():
               writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
 
           for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
-              if datetime.date(datetime.utcfromtimestamp(submission.created_utc)) == yesterday_date:
+              if datetime.date(datetime.fromtimestamp(submission.created_utc, timezone.utc)) == yesterday_date:
                   write_post_data(writer, submission)        
 
   except praw.exceptions.RedditAPIException as e:
