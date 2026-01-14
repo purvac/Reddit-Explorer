@@ -76,10 +76,12 @@ with DAG(
             submission.id,
             remove_special_characters(submission.title),
             remove_special_characters(submission.selftext),
+            submission.author, 
             date_time.date(),
             date_time.time(),
             submission.score,
             submission.upvote_ratio,
+            submission.num_comments,
             submission.url,
         ])
         return None
@@ -119,10 +121,12 @@ with DAG(
                         "Post_ID",
                         "Title",
                         "Body",
+                        "Author", 
                         "Date",
                         "Time",
                         "Score",
                         "Upvote_Ratio",
+                        "Number_of_Comments",
                         "URL",
                     ]
                 )
