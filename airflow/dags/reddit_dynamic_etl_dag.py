@@ -70,7 +70,7 @@ with DAG(
         Writes a single post's data to the CSV file.
 
         """
-        date_time = datetime.utcfromtimestamp(submission.created_utc)
+        date_time = datetime.fromtimestamp(submission.created_utc, timezone.utc)
         writer.writerow([
             submission.id,
             remove_special_characters(submission.title),
