@@ -79,6 +79,7 @@ with DAG(
 
         writer.writerow([
             submission.id,
+            submission.subreddit, 
             remove_special_characters(submission.title),
             body,
             submission.author, 
@@ -124,6 +125,7 @@ with DAG(
                 writer.writerow(
                     [
                         "Post_ID",
+                        "Subreddit",
                         "Title",
                         "Body",
                         "Author", 
