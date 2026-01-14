@@ -72,10 +72,15 @@ with DAG(
 
         """
         date_time = datetime.fromtimestamp(submission.created_utc, timezone.utc)
+        # Extract body text, handling crossposts
+        body = remove_special_characters(submission.selftext)
+        if "crosspost_parent" in vars(submission):
+            body = submission.crosspost_parent_list[0]['selftext']
+
         writer.writerow([
             submission.id,
             remove_special_characters(submission.title),
-            remove_special_characters(submission.selftext),
+            body,
             submission.author, 
             date_time.date(),
             date_time.time(),
