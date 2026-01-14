@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ```
 ### 3. Configure Environment Variables
 
-Create a .env file and fill in the required variable values.
+Create a .env file in the same directory as docker_compose.yaml file and fill in the required variable values.
 ```
 AIRFLOW_UID=<airflow-uid-number>
 client_id=<client-id-value>

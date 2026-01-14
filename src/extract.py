@@ -49,8 +49,9 @@ def main():
 
           # Write header row only if file is empty
           if csvfile.tell() == 0:
-              writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
-
+                writer.writerow(['Post_ID', 'Title', 'Body', 'Date', 'Time', 'Score', 'Upvote Ratio', 'URL'])
+                #Score=Upvotes-Downvotes
+                #Upvote Ratio=Upvotes/(Upvotes+Downvotes) - to get a sense of how positively the post was received
           for submission in subreddit.new(limit=SUBMISSION_PULL_LIMIT):
               if datetime.date(datetime.fromtimestamp(submission.created_utc, timezone.utc)) == yesterday_date:
                   write_post_data(writer, submission)        
