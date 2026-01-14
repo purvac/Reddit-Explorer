@@ -104,7 +104,7 @@ with DAG(
         except Exception as e:
             logging.error(f"Failed to initialize Reddit client: {e}")
             raise
-
+        logging.info("Reddit client initialized successfully.")
         subreddit_obj = reddit.subreddit(subreddit)
 
         filename = f"reddit-post-data-{subreddit}-{extraction_date}.csv"
@@ -139,6 +139,9 @@ with DAG(
                 f"Extraction failed for subreddit={subreddit}, date={extraction_date}: {e}"
             )
             raise
+        logging.info(
+            f"Extraction completed for subreddit={subreddit}, date={extraction_date}"
+        )
 
     extraction_params = generate_extraction_params()
     extract_reddit_posts.expand_kwargs(extraction_params)
