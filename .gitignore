@@ -14,3 +14,4 @@ venv/
 reddit-post-data*.csv
 airflow/logs
 *.csv
+*.parquet

@@ -1,3 +1,4 @@
+import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
@@ -142,6 +143,12 @@ with DAG(
         logging.info(
             f"Extraction completed for subreddit={subreddit}, date={extraction_date}"
         )
-
+        os.chdir("..")
+        os.chdir(BASE_OUTPUT_PATH)
+        df = pd.read_csv(filename)
+        df.to_parquet(filename.strip(".csv") + ".parquet", engine='pyarrow', index=False)
+        logging.info(f"Parquet file created: {filename.strip('.csv') + '.parquet'}")
+        return None
+    
     extraction_params = generate_extraction_params()
     extract_reddit_posts.expand_kwargs(extraction_params)
