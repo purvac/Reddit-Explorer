@@ -82,7 +82,7 @@ with DAG(
             submission.score,
             submission.upvote_ratio,
             submission.num_comments,
-            submission.url,
+            "https://reddit.com" + submission.permalink,
         ])
         return None
 
