@@ -60,12 +60,10 @@ with DAG(
 
         return params
     
-    @task
     def remove_special_characters(text: str) -> str:
         pattern = r'[^a-zA-Z0-9\s]'
         return re.sub(pattern, '', text)
 
-    @task
     def write_post_data(writer: object, submission: object):
         """
         Writes a single post's data to the CSV file.
