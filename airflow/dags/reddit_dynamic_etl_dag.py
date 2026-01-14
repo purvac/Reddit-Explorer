@@ -24,6 +24,7 @@ SUBREDDITS = [
 
 SUBMISSION_PULL_LIMIT = 50
 BASE_OUTPUT_PATH = "/usr/local/airflow/src"
+EXTRACTION_DATE = "2026-01-13"
 
 default_args = {
     "owner": "airflow",
@@ -34,27 +35,27 @@ with DAG(
     dag_id="reddit_dynamic_etl_dag",
     description="Dynamic Reddit ETL DAG using task mapping",
     default_args=default_args,
-    start_date=days_ago(1),
-    schedule_interval="@daily",
-    catchup=True,
+    schedule_interval=None,
+    start_date=datetime(2024, 6, 1),
+    catchup=False,
     max_active_runs=1,
     tags=["RedditETL"],
 ) as dag:
 
     @task
-    def generate_extraction_params(execution_date=None):
+    def generate_extraction_params():
         """
         Generates a list of dictionaries.
         Each dict represents one mapped task input.
         """
-        extraction_date = execution_date.date()
+        extraction_date = EXTRACTION_DATE
 
         params = []
         for subreddit in SUBREDDITS:
             params.append(
                 {
                     "subreddit": subreddit,
-                    "extraction_date": extraction_date.isoformat(),
+                    "extraction_date": extraction_date,
                 }
             )
 
@@ -125,7 +126,7 @@ with DAG(
                     ]
                 )
 
-                for submission in subreddit_obj.new(limit=SUBMISSION_PULL_LIMIT):
+                for submission in subreddit_obj.new():
                     post_date = datetime.fromtimestamp(
                         submission.created_utc, timezone.utc
                     ).date()
