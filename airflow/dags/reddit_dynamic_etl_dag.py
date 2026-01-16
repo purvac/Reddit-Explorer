@@ -1,3 +1,4 @@
+#from fileinput import filename
 import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
@@ -8,7 +9,9 @@ import csv
 import logging
 import praw
 import re
+import boto3
 from dotenv import load_dotenv
+from botocore.exceptions import ClientError
 
 
 #from common.write_csv import write_post_data
@@ -162,27 +165,30 @@ with DAG(
         os.chdir(BASE_OUTPUT_PATH)
         df = pd.read_csv(filename)
         df.to_parquet(filename.strip(".csv") + ".parquet", engine='pyarrow', index=False)
-        logging.info(f"Parquet file created: {filename.strip('.csv') + '.parquet'}")
         
-        return None
-        #return filename+".parquet"
-    """
-    @task
-    def push_file_to_s3(filename: str):
-        session = boto3.Session(profile_name='default')
+        filename = filename.strip(".csv") + ".parquet"
 
-        if object_name is None:
-            object_name = filename
+        logging.info(f"Parquet file created: {filename}")
+
+        #return filename
+
+    #@task
+    #def push_file_to_s3(filename: str):
+        session = boto3.Session()
+        logging.info(f"AWS Session initialized successfully.")
 
         s3_client = boto3.client('s3')
+        
         try:
             response = s3_client.upload_file(filename, "reddit-explorer-bucket", filename)
         except ClientError as e:
             logging.error(e)
-            return False
-        return True
-    """
+        logging.info("Upload Successful")
+        return None
+
     extraction_params = generate_extraction_params()
     extract_reddit_posts.expand_kwargs(extraction_params)
-    #filename = extract_reddit_posts.expand_kwargs(extraction_params)
-    #push_file_to_s3(filename)
+    """
+    filename = extract_reddit_posts.expand_kwargs(extraction_params)
+    push_file_to_s3(filename)
+    """
