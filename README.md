@@ -35,6 +35,12 @@ user_agent=<user-agent-name>
 password=<password>
 username=<reddit-username>
 ```
+Create ~/.aws/credentials file and store the following variables in it
+```
+aws_access_key_id=<aws-access-key>
+aws_secret_access_key=<aws-secret-key>
+```
+
 ### 4. 4. Start the Docker Containers
 
 Start all required services (Airflow, scheduler, workers, etc.) using Docker Compose:
