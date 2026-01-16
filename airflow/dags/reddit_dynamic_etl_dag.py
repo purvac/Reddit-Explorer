@@ -2,7 +2,7 @@ import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import os
 import csv
 import logging
@@ -25,7 +25,6 @@ SUBREDDITS = [
 
 SUBMISSION_PULL_LIMIT = 50
 BASE_OUTPUT_PATH = "/usr/local/airflow/src"
-EXTRACTION_DATE = "2026-01-13"
 
 default_args = {
     "owner": "airflow",
@@ -49,13 +48,18 @@ with DAG(
         Generates a list of dictionaries.
         Each dict represents one mapped task input.
         """
-        extraction_date = EXTRACTION_DATE
+
+        start_date = date(2026, 1, 1)
+        end_date = date(2026, 1, 3)
+        extraction_dates = []
+        while start_date <= end_date:
+            extraction_dates.append(start_date.isoformat())
+            start_date += timedelta(days=1)
 
         params = []
-        for subreddit in SUBREDDITS:
+        for extraction_date in extraction_dates:
             params.append(
                 {
-                    "subreddit": subreddit,
                     "extraction_date": extraction_date,
                 }
             )
@@ -69,9 +73,9 @@ with DAG(
     def write_post_data(writer: object, submission: object):
         """
         Writes a single post's data to the CSV file.
-
         """
         date_time = datetime.fromtimestamp(submission.created_utc, timezone.utc)
+        
         # Extract body text, handling crossposts
         body = remove_special_characters(submission.selftext)
         if "crosspost_parent" in vars(submission):
@@ -93,9 +97,9 @@ with DAG(
         return None
 
     @task
-    def extract_reddit_posts(subreddit: str, extraction_date: str):
+    def extract_reddit_posts(extraction_date: str):
         """
-        Extracts Reddit posts for a single subreddit and date.
+        Extracts Reddit posts for a single date.
         """
         extraction_date = datetime.fromisoformat(extraction_date).date()
 
@@ -114,9 +118,8 @@ with DAG(
             logging.error(f"Failed to initialize Reddit client: {e}")
             raise
         logging.info("Reddit client initialized successfully.")
-        subreddit_obj = reddit.subreddit(subreddit)
 
-        filename = f"reddit-post-data-{subreddit}-{extraction_date}.csv"
+        filename = f"reddit-post-data-{extraction_date}.csv"
         destination = os.path.join(BASE_OUTPUT_PATH, filename)
 
         try:
@@ -137,29 +140,49 @@ with DAG(
                         "URL",
                     ]
                 )
+                for subreddit in SUBREDDITS:
+                    subreddit_obj = reddit.subreddit(subreddit)
 
-                for submission in subreddit_obj.new():
-                    post_date = datetime.fromtimestamp(
-                        submission.created_utc, timezone.utc
-                    ).date()
+                    for submission in subreddit_obj.new():
+                        post_date = datetime.fromtimestamp(submission.created_utc, timezone.utc).date()
 
-                    if post_date == extraction_date:
-                        write_post_data(writer, submission)
+                        if post_date == extraction_date:
+                            write_post_data(writer, submission)
+                    logging.info(f"Extracted posts for subreddit={subreddit}, date={extraction_date}")
 
         except Exception as e:
             logging.error(
-                f"Extraction failed for subreddit={subreddit}, date={extraction_date}: {e}"
+                f"Extraction failed for date={extraction_date}: {e}"
             )
             raise
         logging.info(
-            f"Extraction completed for subreddit={subreddit}, date={extraction_date}"
+            f"Extraction completed for date={extraction_date}"
         )
         os.chdir("..")
         os.chdir(BASE_OUTPUT_PATH)
         df = pd.read_csv(filename)
         df.to_parquet(filename.strip(".csv") + ".parquet", engine='pyarrow', index=False)
         logging.info(f"Parquet file created: {filename.strip('.csv') + '.parquet'}")
+        
         return None
-    
+        #return filename+".parquet"
+    """
+    @task
+    def push_file_to_s3(filename: str):
+        session = boto3.Session(profile_name='default')
+
+        if object_name is None:
+            object_name = filename
+
+        s3_client = boto3.client('s3')
+        try:
+            response = s3_client.upload_file(filename, "reddit-explorer-bucket", filename)
+        except ClientError as e:
+            logging.error(e)
+            return False
+        return True
+    """
     extraction_params = generate_extraction_params()
     extract_reddit_posts.expand_kwargs(extraction_params)
+    #filename = extract_reddit_posts.expand_kwargs(extraction_params)
+    #push_file_to_s3(filename)
