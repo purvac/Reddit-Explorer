@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 import sys
 import logging
 import csv
+import boto3
 from common.write_csv import write_post_data
+from botocore.exceptions import ClientError
 
 #get client_id, client_secret, user_agent, username and password. Can't use praw.ini file since facing issues accessing praw.ini file in airflow run on docker
 """       
@@ -41,7 +43,7 @@ def main():
     
   filename = "reddit-post-data-" + str(yesterday_date) + ".csv"
   # the path below is the local path for the src folder in the docker container. 
-  destination = "/usr/local/airflow/src/" + filename
+  destination = "./" + filename
 
   try:
       with open(destination, 'w', newline='') as csvfile:
@@ -60,7 +62,18 @@ def main():
       logging.error(f"API Error: {e}")
   except Exception as e:
       logging.error(f"An unexpected error occurred: {e}")
-    
+
+  session = boto3.Session(profile_name='default')
+
+  object_name = filename
+
+  s3_client = boto3.client('s3')
+  try:
+        response = s3_client.upload_file(filename, "reddit-explorer-bucket", filename)
+  except ClientError as e:
+        logging.error(e)
+  logging.info("Upload Successful")
+
   return 0
 
 
