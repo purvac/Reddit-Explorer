@@ -37,6 +37,7 @@ username=<reddit-username>
 ```
 Create ~/.aws/credentials file and store the following variables in it
 ```
+[default]
 aws_access_key_id=<aws-access-key>
 aws_secret_access_key=<aws-secret-key>
 ```
