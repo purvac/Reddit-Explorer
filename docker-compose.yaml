@@ -61,6 +61,15 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    client_id: ${client_id}
+    client_secret: ${client_secret}
+    user_agent: ${user_agent}
+    password: ${password}
+    username: ${username}
+    AIRFLOW_UID: ${AIRFLOW_UID}
+    AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
+    #AWS_CONFIG_FILE: /usr/local/airflow/.aws/config
+    AWS_PROFILE: default
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -79,6 +88,7 @@ x-airflow-common:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./src:/usr/local/airflow/src
+    - ~/.aws:/home/airflow/.aws:ro
     # - ./plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

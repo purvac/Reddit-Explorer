@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ```
 ### 3. Configure Environment Variables
 
-Create a .env file and fill in the required variable values.
+Create a .env file in the same directory as docker_compose.yaml file and fill in the required variable values.
 ```
 AIRFLOW_UID=<airflow-uid-number>
 client_id=<client-id-value>
@@ -35,6 +35,13 @@ user_agent=<user-agent-name>
 password=<password>
 username=<reddit-username>
 ```
+Create ~/.aws/credentials file and store the following variables in it
+```
+[default]
+aws_access_key_id=<aws-access-key>
+aws_secret_access_key=<aws-secret-key>
+```
+
 ### 4. 4. Start the Docker Containers
 
 Start all required services (Airflow, scheduler, workers, etc.) using Docker Compose:
