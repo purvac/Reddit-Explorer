@@ -52,8 +52,8 @@ with DAG(
         Each dict represents one mapped task input.
         """
 
-        start_date = date(2026, 1, 1)
-        end_date = date(2026, 1, 3)
+        start_date = date(2025, 10, 1)
+        end_date = date(2025, 12, 31)
         extraction_dates = []
         while start_date <= end_date:
             extraction_dates.append(start_date.isoformat())
@@ -95,6 +95,7 @@ with DAG(
             submission.score,
             submission.upvote_ratio,
             submission.num_comments,
+            submission.is_robot_indexable,
             "https://reddit.com" + submission.permalink,
         ])
         return None
@@ -140,6 +141,7 @@ with DAG(
                         "Score",
                         "Upvote_Ratio",
                         "Number_of_Comments",
+                        "Post_Still_Indexable", #If no, the post has been deleted or removed
                         "URL",
                     ]
                 )
