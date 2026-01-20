@@ -3,16 +3,20 @@ import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone, time
 import os
+import time
 import csv
 import logging
 import praw
 import re
 import boto3
+import prawcore
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 
+logging.getLogger("praw").setLevel(logging.DEBUG)
+logging.getLogger("prawcore").setLevel(logging.DEBUG)
 
 #from common.write_csv import write_post_data
 
@@ -26,7 +30,7 @@ SUBREDDITS = [
     "dataanalysis",
 ]
 
-SUBMISSION_PULL_LIMIT = 50
+SUBMISSION_PULL_LIMIT = 100
 BASE_OUTPUT_PATH = "/usr/local/airflow/src"
 
 default_args = {
@@ -99,7 +103,44 @@ with DAG(
             "https://reddit.com" + submission.permalink,
         ])
         return None
+    
+    def log_reddit_api_error(error: Exception, subreddit: str | None = None):
+        subreddit_info = f" subreddit={subreddit}" if subreddit else ""
 
+        if isinstance(error, prawcore.exceptions.Forbidden):
+            logging.error(
+                f"[403 FORBIDDEN]{subreddit_info} – Access denied. "
+                f"Likely causes: invalid credentials, bad user-agent, or restricted subreddit."
+            )
+
+        elif isinstance(error, prawcore.exceptions.TooManyRequests):
+            logging.error(
+                f"[429 RATE LIMITED]{subreddit_info} – Too many requests. "
+                f"Backoff or reduce parallelism."
+            )
+
+        elif isinstance(error, prawcore.exceptions.Unauthorized):
+            logging.error(
+                "[401 UNAUTHORIZED] Invalid or expired Reddit credentials."
+            )
+
+        elif isinstance(error, prawcore.exceptions.NotFound):
+            logging.error(
+                f"[404 NOT FOUND]{subreddit_info} – Subreddit does not exist or is private."
+            )
+
+        elif isinstance(error, prawcore.exceptions.ResponseException):
+            status = getattr(error.response, "status_code", "UNKNOWN")
+            logging.error(
+                f"[HTTP {status}]{subreddit_info} – Reddit API response error: {error}"
+            )
+
+        else:
+            logging.error(
+                f"[UNKNOWN REDDIT ERROR]{subreddit_info}: {error}"
+            )
+        return None
+    
     @task
     def extract_reddit_posts(extraction_date: str):
         """
@@ -118,10 +159,16 @@ with DAG(
                 password=os.getenv("password"),
                 username=os.getenv("username"),
             )
+            reddit.user.me()
+            logging.info("Reddit client authenticated successfully.")
+
+        except prawcore.exceptions.Unauthorized as e:
+            log_reddit_api_error(e)
+            raise
+
         except Exception as e:
             logging.error(f"Failed to initialize Reddit client: {e}")
             raise
-        logging.info("Reddit client initialized successfully.")
 
         filename = f"reddit-post-data-{extraction_date}.csv"
         destination = os.path.join(BASE_OUTPUT_PATH, filename)
@@ -131,41 +178,70 @@ with DAG(
                 writer = csv.writer(csvfile)
                 writer.writerow(
                     [
-                        "Post_ID",
-                        "Subreddit",
-                        "Title",
-                        "Body",
-                        "Author", 
-                        "Date",
-                        "Time",
-                        "Score",
-                        "Upvote_Ratio",
-                        "Number_of_Comments",
-                        "Post_Still_Indexable", #If no, the post has been deleted or removed
-                        "URL",
+                        "POST_ID",
+                        "SUBREDDIT",
+                        "POST_TITLE",
+                        "POST_BODY",
+                        "POST_AUTHOR", 
+                        "POST_DATE",
+                        "POST_TIME",
+                        "POST_SCORE",
+                        "POST_UPVOTE_RATIO",
+                        "POST_NUMBER_OF_COMMENTS",
+                        "POST_INDEXABLE",
+                        "POST_URL"
                     ]
                 )
+        
                 for subreddit in SUBREDDITS:
-                    subreddit_obj = reddit.subreddit(subreddit)
+                    logging.info(f"Starting extraction for subreddit={subreddit}, date={extraction_date}")
 
-                    for submission in subreddit_obj.new():
+                    subreddit_obj = reddit.subreddit(subreddit)
+                    submission_count = 0
+                    
+                    for submission in subreddit_obj.new(limit=SUBMISSION_PULL_LIMIT):
                         post_date = datetime.fromtimestamp(submission.created_utc, timezone.utc).date()
 
                         if post_date == extraction_date:
                             write_post_data(writer, submission)
-                    logging.info(f"Extracted posts for subreddit={subreddit}, date={extraction_date}")
+                            submission_count += 1
+
+                            if submission_count % 10 == 0:
+                                time.sleep(2)
+                    logging.info(f"Extracted posts for subreddit={subreddit}, date={extraction_date}, extracted_count={submission_count}")
+
+            
+        except prawcore.exceptions.TooManyRequests as e:
+            log_reddit_api_error(e, subreddit)
+            raise  # Fail fast so Airflow retries properly
+
+        except prawcore.exceptions.Forbidden as e:
+            log_reddit_api_error(e, subreddit)
+            raise  # Skip this subreddit, continue others
+
+        except prawcore.exceptions.PrawcoreException as e:
+            log_reddit_api_error(e, subreddit)
+            raise
 
         except Exception as e:
             logging.error(
-                f"Extraction failed for date={extraction_date}: {e}"
+                f"[UNEXPECTED ERROR] Extraction failed for subreddit={subreddit} date={extraction_date}: {e}"
             )
             raise
         logging.info(
             f"Extraction completed for date={extraction_date}"
         )
+
         os.chdir("..")
         os.chdir(BASE_OUTPUT_PATH)
         df = pd.read_csv(filename)
+
+        if df.empty:
+            logging.warning(
+                f"[EMPTY OUTPUT] No posts extracted for date={extraction_date}. "
+                f"This may indicate API access issues or no matching posts."
+            )
+
         df.to_parquet(filename.strip(".csv") + ".parquet", engine='pyarrow', index=False)
         
         filename = filename.strip(".csv") + ".parquet"
@@ -173,6 +249,8 @@ with DAG(
         logging.info(f"Parquet file created: {filename}")
 
         #return filename
+
+        
 
     #@task
     #def push_file_to_s3(filename: str):
