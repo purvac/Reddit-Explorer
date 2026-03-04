@@ -87,7 +87,7 @@ x-airflow-common:
     # bash terminal opens in opt folder
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
-    - ./src:/usr/local/airflow/src
+    - ./airflow/output:/opt/airflow/output
     - ~/.aws:/home/airflow/.aws:ro
     # - ./plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:0"
