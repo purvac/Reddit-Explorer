@@ -2,9 +2,8 @@ import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-from datetime import date, datetime, timedelta, timezone, time
+from datetime import date, datetime, timezone
 import os
-import time
 import csv
 import logging
 import praw

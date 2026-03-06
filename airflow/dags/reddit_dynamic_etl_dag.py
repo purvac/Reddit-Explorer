@@ -1,9 +1,8 @@
 from airflow import DAG
 from airflow.decorators import task
 from datetime import date, datetime, timedelta
-import logging
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
  
-
 SUBMISSION_PULL_LIMIT = 100
 BASE_OUTPUT_PATH = "/opt/airflow/output"
 
@@ -26,7 +25,7 @@ with DAG(
     dag_id="reddit_dynamic_etl_dag",
     description="Dynamic Reddit ETL DAG using task mapping",
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval="10 17 * * *",  # Daily at 17:10 UTC (11:10 PM CST)
     start_date=datetime(2024, 6, 1),
     catchup=False,
     max_active_runs=1,
@@ -39,7 +38,7 @@ with DAG(
         Generates a list of dictionaries.
         Each dict represents one mapped task input.
         """
-        start_date = end_date = date.today() - timedelta(days=2)
+        start_date = end_date = date.today() - timedelta(days=1)
         # start_date = date(2025, 10, 1)
         # end_date = date(2025, 10, 5)
         extraction_dates = []
@@ -73,12 +72,18 @@ with DAG(
         from scripts.data_processing_functions import upload_to_s3
         upload_to_s3(BASE_OUTPUT_PATH, filename)
 
+    copy_into_table = SnowflakeOperator(
+            task_id="copy_s3_to_snowflake",
+            snowflake_conn_id="snowflake_conn",
+            sql="""
+            COPY INTO RAW_REDDIT_POSTS
+            FROM @reddit_s3_stage
+            FILE_FORMAT = (FORMAT_NAME = parquet_format)
+            ON_ERROR = 'CONTINUE'
+            """
+        )
+
     extraction_params = generate_extraction_params()
     filenames = extract_reddit_posts.expand_kwargs(extraction_params)
     push_file_to_s3.expand(filename=filenames)
-
-
-    """
-    Improvements to consider:
-    - Implement data validation checks post-extraction.
-    """
+    copy_into_table.set_upstream(push_file_to_s3)
