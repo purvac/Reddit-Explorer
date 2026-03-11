@@ -58,9 +58,6 @@ with DAG(
         """
         from scripts.data_processing_functions import extract_posts
 
-        logging.getLogger("praw").setLevel(logging.DEBUG)
-        logging.getLogger("prawcore").setLevel(logging.DEBUG)
-
         filename = extract_posts(BASE_OUTPUT_PATH, SUBMISSION_PULL_LIMIT, SUBREDDITS, extraction_date)
         return filename  
      
@@ -79,11 +76,11 @@ with DAG(
             COPY INTO RAW_REDDIT_POSTS
             FROM @reddit_s3_stage
             FILE_FORMAT = (FORMAT_NAME = parquet_format)
+            MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
             ON_ERROR = 'CONTINUE'
             """
         )
 
     extraction_params = generate_extraction_params()
     filenames = extract_reddit_posts.expand_kwargs(extraction_params)
-    push_file_to_s3.expand(filename=filenames)
-    copy_into_table.set_upstream(push_file_to_s3)
+    copy_into_table.set_upstream(push_file_to_s3.expand(filename=filenames))

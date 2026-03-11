@@ -24,6 +24,13 @@ def extract_posts(base_output_path, submission_pull_limit, subreddits, extractio
     # Load credentials
     load_dotenv()
 
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    for logger_name in ("praw", "prawcore"):
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
     try:
         reddit = praw.Reddit(
             client_id=os.getenv("client_id"),
